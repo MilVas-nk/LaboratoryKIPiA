@@ -8,6 +8,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import android.content.Context
 import android.view.inputmethod.InputMethodManager
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -87,10 +88,7 @@ class MainActivity : AppCompatActivity() {
             showError("Введите корректные числовые значения")
             return
         }
-        if (vpi <= 0) {
-            showError("ВПИ должен быть положительным")
-            return
-        }
+        // Убираем ограничение на отрицательные и нулевые значения ВПИ — это покрыто диапазонами ниже
         if (error <= 0) {
             val errorText = if (radioDatchik.isChecked) "Погрешность" else "Класс точности"
             showError("$errorText должен быть положительным")
@@ -107,6 +105,7 @@ class MainActivity : AppCompatActivity() {
         type: DeviceType
     ): CheckResult {
         val vpiRanges = listOf(
+            VpiRange(-0.1, 0.0, "((-0.1) - 0) МПа"),
             VpiRange(0.004, 0.160, "(0.004 - 0.160 МПа"),
             VpiRange(0.06, 0.6, "(0.06 - 0.6) МПа"),
             VpiRange(0.16, 0.6, "(0.16 - 0.6) МПа"),
@@ -129,6 +128,7 @@ class MainActivity : AppCompatActivity() {
         for (range in matchingRanges) {
             val (minError, maxError) = when {
                 type == DeviceType.MANOMETR -> 0.6 to Double.MAX_VALUE
+                range.name == "((-0.1) - 0) МПа" -> 0.25 to 3.0
                 range.name == "(0.004 - 0.160) МПа" -> 0.25 to 3.0
                 range.name == "(0.06 - 0.6) МПа" -> 0.15 to 3.0
                 range.name == "(0.16 - 0.6) МПа" -> 0.25 to 3.0
@@ -145,7 +145,7 @@ class MainActivity : AppCompatActivity() {
                         message = "Можно поверить",
                         details = "Диапазон: ВПИ ${range.name}\n" +
                                 "ВПИ прибора: $vpi МПа\n" +
-                                "${errorName.capitalize()}: $error$errorUnit" // (требуется $minError-$maxError$errorUnit)"
+                                "${errorName.replaceFirstChar { ch -> ch.titlecase(Locale.getDefault()) }}: $error $errorUnit" // (требуется $minError-$maxError$errorUnit)"
                     )
                 }
             } else {
@@ -155,7 +155,7 @@ class MainActivity : AppCompatActivity() {
                         message = "Можно поверить",
                         details = "Диапазон: ВПИ ${range.name}\n" +
                                 "ВПИ прибора: $vpi МПа\n" +
-                                "${errorName.capitalize()}: $error" // (требуется ≥ $minError)"
+                                "${errorName.replaceFirstChar { ch -> ch.titlecase(Locale.getDefault()) }}: $error" // (требуется ≥ $minError)"
                     )
                 }
             }
@@ -163,6 +163,7 @@ class MainActivity : AppCompatActivity() {
         val range = matchingRanges.first()
         if (type == DeviceType.DATCHIK) {
             val (minError, maxError) = when (range.name) {
+                "((-0.1) - 0) МПа" -> 0.25 to 3.0
                 "(0.004 - 0.160) МПа" -> 0.25 to 3.0
                 "(0.06 - 0.6) МПа" -> 0.15 to 3.0
                 "(0.16 - 0.6) МПа" -> 0.25 to 3.0
@@ -176,22 +177,22 @@ class MainActivity : AppCompatActivity() {
                 CheckResult(
                     canVerify = false,
                     message = "Нельзя поверить",
-                    details = "${errorName.capitalize()} прибора ($error$errorUnit) меньше минимально допустимой\n" +
-                            "Для диапазона ${range.name} требуется ${errorName} от $minError до $maxError$errorUnit"
+                    details = "${errorName.replaceFirstChar { ch -> ch.titlecase(Locale.getDefault()) }} прибора $error $errorUnit меньше минимально допустимой\n" +
+                            "Для диапазона ${range.name} требуется ${errorName} от $minError $errorUnit до $maxError $errorUnit"
                 )
             } else {
                 CheckResult(
                     canVerify = false,
                     message = "Нельзя поверить",
-                    details = "${errorName.capitalize()} прибора ($error$errorUnit) больше максимально допустимой\n" +
-                            "Для диапазона ${range.name} требуется ${errorName} от $minError до $maxError$errorUnit"
+                    details = "${errorName.replaceFirstChar { ch -> ch.titlecase(Locale.getDefault()) }} прибора $error $errorUnit больше максимально допустимой\n" +
+                            "Для диапазона ${range.name} требуется ${errorName} от $minError $errorUnit до $maxError $errorUnit"
                 )
             }
         } else {
             return CheckResult(
                 canVerify = false,
                 message = "Нельзя поверить",
-                details = "${errorName.capitalize()} манометра ($error) меньше минимально допустимого\n" +
+                details = "${errorName.replaceFirstChar { ch -> ch.titlecase(Locale.getDefault()) }} манометра $error меньше минимально допустимого\n" +
                         "Для всех диапазонов требуется ${errorName} ≥ 0.6"
             )
         }
