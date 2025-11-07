@@ -55,7 +55,7 @@
 
 ## Скриншоты интерфейса
 
-![ru.milvas.lkipia.jpg](ru.milvas.lkipia.jpg)
+<img src="ru.milvas.lkipia.jpg" width="350">
 
 Интерфейс приложения включает:
 
